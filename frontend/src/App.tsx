@@ -1,9 +1,12 @@
 import { useState } from "react";
+import DashboardPage from "./pages/DashboardPage";
 import ProyectosPage from "./pages/ProyectosPage";
 import TareasPage from "./pages/TareasPage";
 
 function App() {
-  const [activePage, setActivePage] = useState<"tareas" | "proyectos">("tareas");
+  const [activePage, setActivePage] = useState<"dashboard" | "tareas" | "proyectos">(
+    "dashboard"
+  );
 
   return (
     <div className="app-layout">
@@ -11,6 +14,13 @@ function App() {
         <div className="top-nav-inner">
           <span className="top-nav-title">Gestor de tareas por proyecto</span>
           <div className="top-nav-actions">
+            <button
+              className={`nav-button ${activePage === "dashboard" ? "is-active" : ""}`}
+              type="button"
+              onClick={() => setActivePage("dashboard")}
+            >
+              Dashboard
+            </button>
             <button
               className={`nav-button ${activePage === "tareas" ? "is-active" : ""}`}
               type="button"
@@ -30,7 +40,9 @@ function App() {
       </header>
 
       <div className="app-content">
-        {activePage === "tareas" ? <TareasPage /> : <ProyectosPage />}
+        {activePage === "dashboard" && <DashboardPage />}
+        {activePage === "tareas" && <TareasPage />}
+        {activePage === "proyectos" && <ProyectosPage />}
       </div>
     </div>
   );

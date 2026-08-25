@@ -29,8 +29,28 @@ export type TareaValidationErrors = Partial<
   >
 >;
 
-function listTareas(proyectoId?: string): Promise<Tarea[]> {
-  const query = proyectoId ? `?proyectoId=${encodeURIComponent(proyectoId)}` : "";
+type ListTareasFilters = {
+  estado?: TareaEstado | "";
+  prioridad?: TareaPrioridad | "";
+  proyectoId?: string;
+};
+
+function listTareas(filters?: ListTareasFilters): Promise<Tarea[]> {
+  const params = new URLSearchParams();
+
+  if (filters?.proyectoId) {
+    params.set("proyectoId", filters.proyectoId);
+  }
+
+  if (filters?.estado) {
+    params.set("estado", filters.estado);
+  }
+
+  if (filters?.prioridad) {
+    params.set("prioridad", filters.prioridad);
+  }
+
+  const query = params.size > 0 ? `?${params.toString()}` : "";
 
   return requestJson<Tarea[], TareaValidationErrors>("/api/tareas", query);
 }

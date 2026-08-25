@@ -10,10 +10,20 @@ import {
 const tareaRoutes = Router();
 
 tareaRoutes.get("/", (request, response) => {
-  const proyectoId =
-    typeof request.query.proyectoId === "string" ? request.query.proyectoId : undefined;
-
-  response.json(listTareas(proyectoId));
+  response.json(
+    listTareas({
+      proyectoId:
+        typeof request.query.proyectoId === "string"
+          ? request.query.proyectoId
+          : undefined,
+      estado:
+        typeof request.query.estado === "string" ? request.query.estado : undefined,
+      prioridad:
+        typeof request.query.prioridad === "string"
+          ? request.query.prioridad
+          : undefined
+    })
+  );
 });
 
 tareaRoutes.get("/:id", (request, response) => {

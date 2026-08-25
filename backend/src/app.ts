@@ -1,5 +1,6 @@
 import cors from "cors";
 import express from "express";
+import { dashboardRoutes } from "./routes/dashboardRoutes.js";
 import { proyectoRoutes } from "./routes/proyectoRoutes.js";
 import { tareaRoutes } from "./routes/tareaRoutes.js";
 
@@ -26,6 +27,7 @@ function createApp() {
     response.json({ status: "ok" });
   });
 
+  app.use("/api/dashboard", dashboardRoutes);
   app.use("/api/proyectos", proyectoRoutes);
   app.use("/api/tareas", tareaRoutes);
 
