@@ -1,6 +1,7 @@
 import cors from "cors";
 import express from "express";
 import { proyectoRoutes } from "./routes/proyectoRoutes.js";
+import { tareaRoutes } from "./routes/tareaRoutes.js";
 
 function createApp() {
   const app = express();
@@ -26,6 +27,7 @@ function createApp() {
   });
 
   app.use("/api/proyectos", proyectoRoutes);
+  app.use("/api/tareas", tareaRoutes);
 
   return app;
 }

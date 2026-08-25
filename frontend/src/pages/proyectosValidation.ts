@@ -1,3 +1,4 @@
+import { isValidDateString } from "../services/dateValidation";
 import type {
   ProyectoEstado,
   ProyectoPayload,
@@ -11,27 +12,6 @@ export type ProyectoFormValues = {
   estado: ProyectoEstado;
 };
 
-function isValidDate(value: string): boolean {
-  const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(value);
-
-  if (!match) {
-    return false;
-  }
-
-  const year = Number(match[1]);
-  const month = Number(match[2]);
-  const day = Number(match[3]);
-  const date = new Date(Date.UTC(0, 0, 1));
-
-  date.setUTCFullYear(year, month - 1, day);
-
-  return (
-    date.getUTCFullYear() === year &&
-    date.getUTCMonth() === month - 1 &&
-    date.getUTCDate() === day
-  );
-}
-
 function validateProyectoForm(
   values: ProyectoFormValues
 ): ProyectoValidationErrors {
@@ -41,7 +21,7 @@ function validateProyectoForm(
     errors.nombre = "El nombre es obligatorio.";
   }
 
-  if (values.fechaLimite && !isValidDate(values.fechaLimite)) {
+  if (values.fechaLimite && !isValidDateString(values.fechaLimite)) {
     errors.fechaLimite = "La fecha limite debe ser una fecha valida.";
   }
 

@@ -12,6 +12,8 @@ import {
   listProyectos as listProyectosInStore,
   updateProyecto as updateProyectoInStore
 } from "../store/proyectoStore.js";
+import { hasTareasByProyectoId } from "../store/tareaStore.js";
+import { isValidDateString } from "./dateValidation.js";
 
 type ValidationResult =
   | {
@@ -33,6 +35,8 @@ type MutateProyectoResult =
       errors: ProyectoValidationErrors;
     };
 
+type DeleteProyectoResult = "deleted" | "not_found" | "has_tasks";
+
 const ESTADOS_PROYECTO: ProyectoEstado[] = ["activo", "cerrado"];
 
 function isObject(value: unknown): value is Record<string, unknown> {
@@ -41,27 +45,6 @@ function isObject(value: unknown): value is Record<string, unknown> {
 
 function isValidProyectoEstado(value: unknown): value is ProyectoEstado {
   return typeof value === "string" && ESTADOS_PROYECTO.includes(value as ProyectoEstado);
-}
-
-function isValidDate(value: string): boolean {
-  const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(value);
-
-  if (!match) {
-    return false;
-  }
-
-  const year = Number(match[1]);
-  const month = Number(match[2]);
-  const day = Number(match[3]);
-  const date = new Date(Date.UTC(0, 0, 1));
-
-  date.setUTCFullYear(year, month - 1, day);
-
-  return (
-    date.getUTCFullYear() === year &&
-    date.getUTCMonth() === month - 1 &&
-    date.getUTCDate() === day
-  );
 }
 
 function validateProyectoPayload(
@@ -102,7 +85,7 @@ function validateProyectoPayload(
     if (
       typeof fechaLimite !== "string" ||
       fechaLimite === "" ||
-      !isValidDate(fechaLimite)
+      !isValidDateString(fechaLimite)
     ) {
       errors.fechaLimite = "La fecha limite debe ser una fecha valida.";
     }
@@ -181,8 +164,20 @@ function updateProyecto(id: string, payload: unknown): MutateProyectoResult | nu
   };
 }
 
-function deleteProyecto(id: string): boolean {
-  return deleteProyectoInStore(id);
+function deleteProyecto(id: string): DeleteProyectoResult {
+  const existingProyecto = getProyectoById(id);
+
+  if (!existingProyecto) {
+    return "not_found";
+  }
+
+  if (hasTareasByProyectoId(id)) {
+    return "has_tasks";
+  }
+
+  deleteProyectoInStore(id);
+
+  return "deleted";
 }
 
 export {

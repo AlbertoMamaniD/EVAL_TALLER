@@ -4,6 +4,7 @@ import type { AddressInfo } from "node:net";
 import type { Server } from "node:http";
 import { createApp } from "../app.js";
 import { resetProyectoStore } from "../store/proyectoStore.js";
+import { resetTareaStore } from "../store/tareaStore.js";
 
 describe("proyectoRoutes", () => {
   let server: Server;
@@ -11,6 +12,7 @@ describe("proyectoRoutes", () => {
 
   beforeEach(async () => {
     resetProyectoStore();
+    resetTareaStore();
     server = createApp().listen(0);
     await once(server, "listening");
 
@@ -261,6 +263,44 @@ describe("proyectoRoutes", () => {
 
     expect(deleteResponse.status).toBe(204);
     expect(proyectos).toHaveLength(0);
+  });
+
+  it("rechaza borrar un proyecto con tareas asociadas", async () => {
+    const createProyectoResponse = await fetch(`${baseUrl}/api/proyectos`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        nombre: "Proyecto con tareas"
+      })
+    });
+    const proyecto = (await createProyectoResponse.json()) as { id: string };
+
+    await fetch(`${baseUrl}/api/tareas`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        titulo: "Tarea asociada",
+        proyectoId: proyecto.id
+      })
+    });
+
+    const deleteResponse = await fetch(`${baseUrl}/api/proyectos/${proyecto.id}`, {
+      method: "DELETE"
+    });
+    const payload = (await deleteResponse.json()) as {
+      message: string;
+    };
+    const getProyectoResponse = await fetch(`${baseUrl}/api/proyectos/${proyecto.id}`);
+
+    expect(deleteResponse.status).toBe(400);
+    expect(payload.message).toBe(
+      "No se puede eliminar el proyecto porque tiene tareas asociadas."
+    );
+    expect(getProyectoResponse.status).toBe(200);
   });
 
   it("lista los proyectos cargados", async () => {
