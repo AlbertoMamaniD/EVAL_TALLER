@@ -1,0 +1,214 @@
+import type {
+  Proyecto,
+  ProyectoEstado,
+  ProyectoInput,
+  ProyectoPayload,
+  ProyectoValidationErrors,
+} from "../models/proyecto.js";
+import {
+  createProyecto as createProyectoInStore,
+  deleteProyecto as deleteProyectoInStore,
+  getProyectoById,
+  listProyectos as listProyectosInStore,
+  updateProyecto as updateProyectoInStore,
+} from "../store/proyectoStore.js";
+import { hasTareasByProyectoId } from "../store/tareaStore.js";
+import { isValidDateString } from "./dateValidation.js";
+
+type ValidationResult =
+  | {
+      success: true;
+      data: ProyectoInput;
+    }
+  | {
+      success: false;
+      errors: ProyectoValidationErrors;
+    };
+
+type MutateProyectoResult =
+  | {
+      success: true;
+      data: Proyecto;
+    }
+  | {
+      success: false;
+      errors: ProyectoValidationErrors;
+    };
+
+type DeleteProyectoResult = "deleted" | "not_found" | "has_tasks";
+
+const ESTADOS_PROYECTO: ProyectoEstado[] = ["activo", "cerrado"];
+const MAX_PROYECTO_NOMBRE_LENGTH = 100;
+const MAX_PROYECTO_DESCRIPCION_LENGTH = 500;
+
+function isObject(value: unknown): value is Record<string, unknown> {
+  return typeof value === "object" && value !== null;
+}
+
+function isValidProyectoEstado(value: unknown): value is ProyectoEstado {
+  return (
+    typeof value === "string" &&
+    ESTADOS_PROYECTO.includes(value as ProyectoEstado)
+  );
+}
+
+function validateProyectoPayload(
+  payload: unknown,
+  defaultEstado: ProyectoEstado = "activo",
+): ValidationResult {
+  if (!isObject(payload)) {
+    return {
+      success: false,
+      errors: {
+        nombre: "El nombre es obligatorio.",
+      },
+    };
+  }
+
+  const proyectoPayload = payload as ProyectoPayload;
+  const errors: ProyectoValidationErrors = {};
+  const nombre =
+    typeof proyectoPayload.nombre === "string"
+      ? proyectoPayload.nombre.trim()
+      : "";
+  const descripcion =
+    typeof proyectoPayload.descripcion === "string"
+      ? proyectoPayload.descripcion.trim()
+      : undefined;
+
+  if (!nombre) {
+    errors.nombre = "El nombre es obligatorio.";
+  } else if (nombre.length > MAX_PROYECTO_NOMBRE_LENGTH) {
+    errors.nombre = `El nombre no puede superar los ${MAX_PROYECTO_NOMBRE_LENGTH} caracteres.`;
+  }
+
+  if (
+    proyectoPayload.descripcion !== undefined &&
+    typeof proyectoPayload.descripcion !== "string"
+  ) {
+    errors.descripcion = "La descripcion debe ser un texto.";
+  } else if (
+    typeof descripcion === "string" &&
+    descripcion.length > MAX_PROYECTO_DESCRIPCION_LENGTH
+  ) {
+    errors.descripcion = `La descripcion no puede superar los ${MAX_PROYECTO_DESCRIPCION_LENGTH} caracteres.`;
+  }
+
+  if (
+    proyectoPayload.fechaLimite !== undefined &&
+    proyectoPayload.fechaLimite !== null
+  ) {
+    const fechaLimite =
+      typeof proyectoPayload.fechaLimite === "string"
+        ? proyectoPayload.fechaLimite.trim()
+        : proyectoPayload.fechaLimite;
+
+    if (
+      typeof fechaLimite !== "string" ||
+      fechaLimite === "" ||
+      !isValidDateString(fechaLimite)
+    ) {
+      errors.fechaLimite = "La fecha limite debe ser una fecha valida.";
+    }
+  }
+
+  if (
+    proyectoPayload.estado !== undefined &&
+    !isValidProyectoEstado(proyectoPayload.estado)
+  ) {
+    errors.estado = "El estado debe ser 'activo' o 'cerrado'.";
+  }
+
+  if (Object.keys(errors).length > 0) {
+    return {
+      success: false,
+      errors,
+    };
+  }
+
+  return {
+    success: true,
+    data: {
+      nombre,
+      descripcion: descripcion ?? "",
+      fechaLimite:
+        typeof proyectoPayload.fechaLimite === "string"
+          ? proyectoPayload.fechaLimite.trim()
+          : null,
+      estado: isValidProyectoEstado(proyectoPayload.estado)
+        ? proyectoPayload.estado
+        : defaultEstado,
+    },
+  };
+}
+
+function listProyectos(): Proyecto[] {
+  return listProyectosInStore();
+}
+
+function findProyectoById(id: string): Proyecto | undefined {
+  return getProyectoById(id);
+}
+
+function createProyecto(payload: unknown): MutateProyectoResult {
+  const validationResult = validateProyectoPayload(payload, "activo");
+
+  if (!validationResult.success) {
+    return validationResult;
+  }
+
+  return {
+    success: true,
+    data: createProyectoInStore(validationResult.data),
+  };
+}
+
+function updateProyecto(
+  id: string,
+  payload: unknown,
+): MutateProyectoResult | null {
+  const existingProyecto = getProyectoById(id);
+
+  if (!existingProyecto) {
+    return null;
+  }
+
+  const validationResult = validateProyectoPayload(
+    payload,
+    existingProyecto.estado,
+  );
+
+  if (!validationResult.success) {
+    return validationResult;
+  }
+
+  return {
+    success: true,
+    data: updateProyectoInStore(id, validationResult.data) as Proyecto,
+  };
+}
+
+function deleteProyecto(id: string): DeleteProyectoResult {
+  const existingProyecto = getProyectoById(id);
+
+  if (!existingProyecto) {
+    return "not_found";
+  }
+
+  if (hasTareasByProyectoId(id)) {
+    return "has_tasks";
+  }
+
+  deleteProyectoInStore(id);
+
+  return "deleted";
+}
+
+export {
+  createProyecto,
+  deleteProyecto,
+  findProyectoById,
+  listProyectos,
+  updateProyecto,
+  validateProyectoPayload,
+};
