@@ -38,6 +38,8 @@ type MutateTareaResult =
 
 const PRIORIDADES_TAREA: TareaPrioridad[] = ["baja", "media", "alta"];
 const ESTADOS_TAREA: TareaEstado[] = ["pendiente", "en_progreso", "hecha"];
+const MAX_TAREA_TITULO_LENGTH = 120;
+const MAX_TAREA_DESCRIPCION_LENGTH = 500;
 
 type ListTareasFilters = {
   estado?: string;
@@ -89,9 +91,15 @@ function validateTareaPayload(
   const titulo = typeof tareaPayload.titulo === "string" ? tareaPayload.titulo.trim() : "";
   const proyectoId =
     typeof tareaPayload.proyectoId === "string" ? tareaPayload.proyectoId.trim() : "";
+  const descripcion =
+    typeof tareaPayload.descripcion === "string"
+      ? tareaPayload.descripcion.trim()
+      : undefined;
 
   if (!titulo) {
     errors.titulo = "El titulo es obligatorio.";
+  } else if (titulo.length > MAX_TAREA_TITULO_LENGTH) {
+    errors.titulo = `El titulo no puede superar los ${MAX_TAREA_TITULO_LENGTH} caracteres.`;
   }
 
   if (
@@ -99,6 +107,12 @@ function validateTareaPayload(
     typeof tareaPayload.descripcion !== "string"
   ) {
     errors.descripcion = "La descripcion debe ser un texto.";
+  } else if (
+    typeof descripcion === "string" &&
+    descripcion.length > MAX_TAREA_DESCRIPCION_LENGTH
+  ) {
+    errors.descripcion =
+      `La descripcion no puede superar los ${MAX_TAREA_DESCRIPCION_LENGTH} caracteres.`;
   }
 
   if (!proyectoId) {
@@ -147,10 +161,7 @@ function validateTareaPayload(
     success: true,
     data: {
       titulo,
-      descripcion:
-        typeof tareaPayload.descripcion === "string"
-          ? tareaPayload.descripcion.trim()
-          : "",
+      descripcion: descripcion ?? "",
       proyectoId,
       prioridad: isValidTareaPrioridad(tareaPayload.prioridad)
         ? tareaPayload.prioridad

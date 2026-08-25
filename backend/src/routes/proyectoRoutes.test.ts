@@ -93,6 +93,32 @@ describe("proyectoRoutes", () => {
     expect(payload.errors.nombre).toBe("El nombre es obligatorio.");
   });
 
+  it("rechaza nombres y descripciones demasiado largos", async () => {
+    const response = await fetch(`${baseUrl}/api/proyectos`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        nombre: "N".repeat(101),
+        descripcion: "D".repeat(501)
+      })
+    });
+
+    const payload = (await response.json()) as {
+      errors: {
+        descripcion?: string;
+        nombre?: string;
+      };
+    };
+
+    expect(response.status).toBe(400);
+    expect(payload.errors.nombre).toBe("El nombre no puede superar los 100 caracteres.");
+    expect(payload.errors.descripcion).toBe(
+      "La descripcion no puede superar los 500 caracteres."
+    );
+  });
+
   it("rechaza fechas imposibles al crear", async () => {
     const response = await fetch(`${baseUrl}/api/proyectos`, {
       method: "POST",

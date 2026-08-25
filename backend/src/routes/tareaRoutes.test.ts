@@ -112,6 +112,35 @@ describe("tareaRoutes", () => {
     expect(payload.errors.proyectoId).toBe("El proyecto seleccionado no existe.");
   });
 
+  it("rechaza titulos y descripciones demasiado largos", async () => {
+    const proyecto = await createProyecto("Proyecto base");
+
+    const response = await fetch(`${baseUrl}/api/tareas`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        titulo: "T".repeat(121),
+        descripcion: "D".repeat(501),
+        proyectoId: proyecto.id
+      })
+    });
+
+    const payload = (await response.json()) as {
+      errors: {
+        descripcion?: string;
+        titulo?: string;
+      };
+    };
+
+    expect(response.status).toBe(400);
+    expect(payload.errors.titulo).toBe("El titulo no puede superar los 120 caracteres.");
+    expect(payload.errors.descripcion).toBe(
+      "La descripcion no puede superar los 500 caracteres."
+    );
+  });
+
   it("edita una tarea existente", async () => {
     const proyectoA = await createProyecto("Proyecto A");
     const proyectoB = await createProyecto("Proyecto B");

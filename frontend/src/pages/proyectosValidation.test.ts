@@ -25,6 +25,19 @@ describe("proyectosValidation", () => {
     expect(errors.fechaLimite).toBe("La fecha limite debe ser una fecha valida.");
   });
 
+  it("valida el largo maximo de nombre y descripcion", () => {
+    const errors = validateProyectoForm({
+      ...createEmptyProyectoFormValues(),
+      nombre: "N".repeat(101),
+      descripcion: "D".repeat(501)
+    });
+
+    expect(errors.nombre).toBe("El nombre no puede superar los 100 caracteres.");
+    expect(errors.descripcion).toBe(
+      "La descripcion no puede superar los 500 caracteres."
+    );
+  });
+
   it("rechaza fechas calendario imposibles", () => {
     const errors = validateProyectoForm({
       ...createEmptyProyectoFormValues(),
