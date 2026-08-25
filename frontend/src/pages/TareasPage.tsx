@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import { PageLayout } from "../components/PageLayout";
 import { TareaForm } from "../components/TareaForm";
 import { TareaTable } from "../components/TareaTable";
 import {
@@ -20,6 +21,12 @@ import {
   validateTareaForm,
   type TareaFormValues
 } from "./tareasValidation";
+
+type TareaFilters = {
+  estado: "" | TareaFormValues["estado"];
+  prioridad: "" | TareaFormValues["prioridad"];
+  proyectoId: string;
+};
 
 function getErrorMessage(error: unknown, fallbackMessage: string): string {
   if (error instanceof ApiClientError) {
@@ -70,6 +77,11 @@ function TareasPage() {
     createEmptyTareaFormValues()
   );
   const [editingErrors, setEditingErrors] = useState<TareaValidationErrors>({});
+  const [filters, setFilters] = useState<TareaFilters>({
+    proyectoId: "",
+    estado: "",
+    prioridad: ""
+  });
   const editingIdRef = useRef<string | null>(null);
 
   useEffect(() => {
@@ -83,17 +95,13 @@ function TareasPage() {
       try {
         setIsLoading(true);
         setPageError(null);
-        const [proyectosResponse, tareasResponse] = await Promise.all([
-          listProyectos(),
-          listTareas()
-        ]);
+        const proyectosResponse = await listProyectos();
 
         if (!isActive) {
           return;
         }
 
         setProyectos(proyectosResponse);
-        setTareas(tareasResponse);
       } catch (error) {
         if (!isActive) {
           return;
@@ -114,7 +122,46 @@ function TareasPage() {
     };
   }, []);
 
+  useEffect(() => {
+    let isActive = true;
+
+    const loadFilteredTareas = async () => {
+      try {
+        setIsLoading(true);
+        setPageError(null);
+        const response = await listTareas(filters);
+
+        if (!isActive) {
+          return;
+        }
+
+        setTareas(response);
+      } catch (error) {
+        if (!isActive) {
+          return;
+        }
+
+        setPageError(getErrorMessage(error, "No se pudieron cargar las tareas."));
+      } finally {
+        if (isActive) {
+          setIsLoading(false);
+        }
+      }
+    };
+
+    void loadFilteredTareas();
+
+    return () => {
+      isActive = false;
+    };
+  }, [filters]);
+
   const projectIds = proyectos.map((proyecto) => proyecto.id);
+
+  const reloadTareas = async (nextFilters: TareaFilters = filters) => {
+    const response = await listTareas(nextFilters);
+    setTareas(response);
+  };
 
   const handleCreateChange = (field: keyof TareaFormValues, value: string) => {
     setFormValues((currentValues) => ({
@@ -126,6 +173,13 @@ function TareasPage() {
       [field]: undefined
     }));
     setFormMessage(null);
+  };
+
+  const handleFilterChange = (field: keyof TareaFilters, value: string) => {
+    setFilters((currentFilters) => ({
+      ...currentFilters,
+      [field]: value
+    }));
   };
 
   const handleEditChange = (field: keyof TareaFormValues, value: string) => {
@@ -156,9 +210,8 @@ function TareasPage() {
       setIsCreating(true);
       setFormErrors({});
       setFormMessage(null);
-      const createdTarea = await createTarea(toTareaPayload(formValues));
-
-      setTareas((currentTareas) => [...currentTareas, createdTarea]);
+      await createTarea(toTareaPayload(formValues));
+      await reloadTareas();
       setFormValues(createEmptyTareaFormValues());
       setFormMessage("Tarea creada correctamente.");
     } catch (error) {
@@ -198,11 +251,8 @@ function TareasPage() {
       setSavingId(id);
       setEditingErrors({});
       setPageError(null);
-      const updatedTarea = await updateTarea(id, toTareaPayload(editingValues));
-
-      setTareas((currentTareas) =>
-        currentTareas.map((tarea) => (tarea.id === id ? updatedTarea : tarea))
-      );
+      await updateTarea(id, toTareaPayload(editingValues));
+      await reloadTareas();
 
       if (editingIdRef.current === id) {
         handleEditCancel();
@@ -232,9 +282,7 @@ function TareasPage() {
       );
       setPageError(null);
       await deleteTarea(tarea.id);
-      setTareas((currentTareas) =>
-        currentTareas.filter((item) => item.id !== tarea.id)
-      );
+      await reloadTareas();
 
       if (editingId === tarea.id) {
         handleEditCancel();
@@ -249,23 +297,21 @@ function TareasPage() {
   };
 
   return (
-    <main className="app-shell app-shell-projects">
-      <section className="hero">
-        <p className="eyebrow">ABM de tareas</p>
-        <h1>Gestor de tareas</h1>
-        <p className="hero-copy">
-          Registra tareas asociadas a proyectos, define prioridad, seguimiento y
-          vencimientos en memoria.
-        </p>
-      </section>
-
-      {(pageError || formMessage) && (
-        <div className={`feedback-banner ${pageError ? "feedback-error" : "feedback-success"}`}>
-          {pageError || formMessage}
-        </div>
-      )}
-
-      <div className="content-grid">
+    <PageLayout
+      bodyClassName="content-grid"
+      description="Registra tareas asociadas a proyectos, define prioridad, seguimiento y vencimientos en memoria."
+      eyebrow="ABM de tareas"
+      feedback={
+        pageError || formMessage ? (
+          <div
+            className={`feedback-banner ${pageError ? "feedback-error" : "feedback-success"}`}
+          >
+            {pageError || formMessage}
+          </div>
+        ) : undefined
+      }
+      title="Gestor de tareas"
+    >
         <TareaForm
           errors={formErrors}
           isDisabled={isLoading || isCreating || proyectos.length === 0}
@@ -276,23 +322,77 @@ function TareasPage() {
           values={formValues}
         />
 
-        <TareaTable
-          deletingIds={deletingIds}
-          editingErrors={editingErrors}
-          editingId={editingId}
-          editingValues={editingValues}
-          isLoading={isLoading}
-          onCancelEdit={handleEditCancel}
-          onDelete={handleDelete}
-          onEdit={handleEditStart}
-          onEditChange={handleEditChange}
-          onSaveEdit={handleEditSubmit}
-          proyectos={proyectos}
-          savingId={savingId}
-          tareas={tareas}
-        />
-      </div>
-    </main>
+        <div className="list-column">
+          <section className="panel">
+            <div className="panel-heading">
+              <p className="eyebrow">Filtros</p>
+              <h2>Buscar tareas</h2>
+            </div>
+            <div className="filter-grid">
+              <label className="field">
+                <span>Proyecto</span>
+                <select
+                  value={filters.proyectoId}
+                  onChange={(event) =>
+                    handleFilterChange("proyectoId", event.target.value)
+                  }
+                >
+                  <option value="">Todos los proyectos</option>
+                  {proyectos.map((proyecto) => (
+                    <option key={proyecto.id} value={proyecto.id}>
+                      {proyecto.nombre}
+                    </option>
+                  ))}
+                </select>
+              </label>
+
+              <label className="field">
+                <span>Estado</span>
+                <select
+                  value={filters.estado}
+                  onChange={(event) => handleFilterChange("estado", event.target.value)}
+                >
+                  <option value="">Todos los estados</option>
+                  <option value="pendiente">Pendiente</option>
+                  <option value="en_progreso">En progreso</option>
+                  <option value="hecha">Hecha</option>
+                </select>
+              </label>
+
+              <label className="field">
+                <span>Prioridad</span>
+                <select
+                  value={filters.prioridad}
+                  onChange={(event) =>
+                    handleFilterChange("prioridad", event.target.value)
+                  }
+                >
+                  <option value="">Todas las prioridades</option>
+                  <option value="baja">Baja</option>
+                  <option value="media">Media</option>
+                  <option value="alta">Alta</option>
+                </select>
+              </label>
+            </div>
+          </section>
+
+          <TareaTable
+            deletingIds={deletingIds}
+            editingErrors={editingErrors}
+            editingId={editingId}
+            editingValues={editingValues}
+            isLoading={isLoading}
+            onCancelEdit={handleEditCancel}
+            onDelete={handleDelete}
+            onEdit={handleEditStart}
+            onEditChange={handleEditChange}
+            onSaveEdit={handleEditSubmit}
+            proyectos={proyectos}
+            savingId={savingId}
+            tareas={tareas}
+          />
+        </div>
+    </PageLayout>
   );
 }
 

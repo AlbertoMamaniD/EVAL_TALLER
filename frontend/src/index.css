@@ -1,4 +1,5 @@
 :root {
+  --header-offset: 5.75rem;
   color: #18212f;
   background:
     radial-gradient(circle at top left, rgba(255, 207, 126, 0.32), transparent 28%),
@@ -13,11 +14,16 @@
   box-sizing: border-box;
 }
 
+html {
+  min-height: 100%;
+}
+
 body {
   margin: 0;
   min-width: 320px;
   min-height: 100vh;
   overflow-x: hidden;
+  overflow-y: auto;
 }
 
 #root {
@@ -26,13 +32,16 @@ body {
 
 .app-layout {
   min-height: 100vh;
-  display: grid;
-  grid-template-rows: auto 1fr;
+  display: flex;
+  flex-direction: column;
 }
 
 .app-content {
+  flex: 1 0 auto;
+  min-height: 0;
   position: relative;
   z-index: 0;
+  overflow: visible;
 }
 
 .top-nav {
@@ -86,19 +95,26 @@ body {
   color: #fffef7;
 }
 
-.app-shell {
-  min-height: 100%;
-  padding: 2rem clamp(1rem, 3vw, 2rem) 3rem;
-}
-
-.app-shell-projects {
+.page-shell {
   width: min(1280px, 100%);
   margin: 0 auto;
+  display: grid;
+  gap: 2rem;
+  min-height: 100%;
+  padding:
+    calc(var(--header-offset) + 1.5rem)
+    clamp(1rem, 3vw, 2rem)
+    3rem;
+}
+
+.page-layout-body {
   display: grid;
   gap: 2rem;
 }
 
 .hero {
+  display: grid;
+  gap: 0.75rem;
   padding: 0;
 }
 
@@ -110,20 +126,28 @@ body {
 
 .hero-copy {
   width: min(100%, 44rem);
-  margin: 1rem 0 0;
+  margin: 0;
   color: rgba(24, 33, 47, 0.82);
   font-size: 1.05rem;
 }
 
 .content-grid {
   display: grid;
-  grid-template-columns: minmax(320px, 380px) minmax(0, 1fr);
+  grid-template-columns: minmax(280px, 340px) minmax(620px, 1fr);
   gap: 2rem;
   align-items: start;
 }
 
 .content-grid > * {
   min-width: 0;
+  max-width: 100%;
+}
+
+.list-column {
+  display: grid;
+  gap: 2rem;
+  min-width: 0;
+  max-width: 100%;
 }
 
 .panel {
@@ -133,6 +157,8 @@ body {
   padding: clamp(1.5rem, 2.4vw, 2.2rem);
   box-shadow: 0 24px 60px rgba(24, 33, 47, 0.14);
   backdrop-filter: blur(10px);
+  min-width: 0;
+  max-width: 100%;
 }
 
 .panel-heading {
@@ -159,11 +185,22 @@ body {
   gap: 1.1rem 1rem;
 }
 
+.form-grid > * {
+  min-width: 0;
+}
+
+.filter-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 1rem;
+}
+
 .field {
   display: grid;
   gap: 0.55rem;
   font-weight: 600;
   color: #223040;
+  min-width: 0;
 }
 
 .field-full {
@@ -177,12 +214,20 @@ body {
 .project-table textarea,
 .project-table select {
   width: 100%;
+  min-width: 0;
+  max-width: 100%;
   border: 1px solid rgba(24, 33, 47, 0.16);
   border-radius: 12px;
   background: rgba(255, 255, 255, 0.94);
   padding: 0.8rem 0.9rem;
   color: inherit;
   font: inherit;
+}
+
+.field input[type="date"],
+.cell-field input[type="date"] {
+  appearance: none;
+  -webkit-appearance: none;
 }
 
 .field textarea,
@@ -248,8 +293,59 @@ body {
   color: #8f1d14;
 }
 
+.summary-grid {
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  align-items: start;
+}
+
+.summary-card {
+  display: grid;
+  gap: 1.25rem;
+}
+
+.summary-total {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 1rem;
+  border: 1px solid rgba(24, 33, 47, 0.08);
+  border-radius: 16px;
+  padding: 1rem 1.1rem;
+  background: rgba(24, 33, 47, 0.03);
+}
+
+.summary-total-label {
+  color: rgba(24, 33, 47, 0.72);
+  font-weight: 700;
+}
+
+.summary-total strong {
+  font-size: 2rem;
+  line-height: 1;
+}
+
+.summary-stats {
+  display: grid;
+  gap: 0.85rem;
+}
+
+.summary-stat {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+}
+
+.summary-stat strong {
+  font-size: 1.15rem;
+}
+
 .table-wrapper {
+  display: block;
+  width: 100%;
+  max-width: 100%;
   overflow-x: auto;
+  overflow-y: hidden;
   border-radius: 16px;
   padding-bottom: 0.25rem;
   -webkit-overflow-scrolling: touch;
@@ -431,13 +527,21 @@ body {
   gap: 0.4rem;
 }
 
-@media (max-width: 980px) {
+@media (max-width: 768px) {
   .content-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .filter-grid {
     grid-template-columns: 1fr;
   }
 }
 
 @media (max-width: 720px) {
+  :root {
+    --header-offset: 0rem;
+  }
+
   .top-nav {
     position: static;
   }
@@ -456,8 +560,8 @@ body {
     text-align: center;
   }
 
-  .app-shell {
-    padding: 1rem;
+  .page-shell {
+    padding: 1rem 1rem 2rem;
   }
 
   .form-grid {

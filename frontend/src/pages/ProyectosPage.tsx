@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import { PageLayout } from "../components/PageLayout";
 import { ProyectoForm } from "../components/ProyectoForm";
 import { ProyectoTable } from "../components/ProyectoTable";
 import {
@@ -227,23 +228,21 @@ function ProyectosPage() {
   };
 
   return (
-    <main className="app-shell app-shell-projects">
-      <section className="hero">
-        <p className="eyebrow">ABM de proyectos</p>
-        <h1>Gestor de proyectos</h1>
-        <p className="hero-copy">
-          Crea, edita y elimina proyectos en memoria para avanzar con la base del
-          trabajo final.
-        </p>
-      </section>
-
-      {(pageError || formMessage) && (
-        <div className={`feedback-banner ${pageError ? "feedback-error" : "feedback-success"}`}>
-          {pageError || formMessage}
-        </div>
-      )}
-
-      <div className="content-grid">
+    <PageLayout
+      bodyClassName="content-grid"
+      description="Crea, edita y elimina proyectos en memoria para avanzar con la base del trabajo final."
+      eyebrow="ABM de proyectos"
+      feedback={
+        pageError || formMessage ? (
+          <div
+            className={`feedback-banner ${pageError ? "feedback-error" : "feedback-success"}`}
+          >
+            {pageError || formMessage}
+          </div>
+        ) : undefined
+      }
+      title="Gestor de proyectos"
+    >
         <ProyectoForm
           errors={formErrors}
           isDisabled={isLoading || isCreating}
@@ -267,8 +266,7 @@ function ProyectosPage() {
           proyectos={proyectos}
           savingId={savingId}
         />
-      </div>
-    </main>
+    </PageLayout>
   );
 }
 

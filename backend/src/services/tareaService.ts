@@ -39,6 +39,12 @@ type MutateTareaResult =
 const PRIORIDADES_TAREA: TareaPrioridad[] = ["baja", "media", "alta"];
 const ESTADOS_TAREA: TareaEstado[] = ["pendiente", "en_progreso", "hecha"];
 
+type ListTareasFilters = {
+  estado?: string;
+  prioridad?: string;
+  proyectoId?: string;
+};
+
 function isObject(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null;
 }
@@ -49,6 +55,18 @@ function isValidTareaPrioridad(value: unknown): value is TareaPrioridad {
 
 function isValidTareaEstado(value: unknown): value is TareaEstado {
   return typeof value === "string" && ESTADOS_TAREA.includes(value as TareaEstado);
+}
+
+function isValidListTareasFilters(filters: ListTareasFilters): boolean {
+  if (filters.estado && !isValidTareaEstado(filters.estado)) {
+    return false;
+  }
+
+  if (filters.prioridad && !isValidTareaPrioridad(filters.prioridad)) {
+    return false;
+  }
+
+  return true;
 }
 
 function validateTareaPayload(
@@ -148,8 +166,20 @@ function validateTareaPayload(
   };
 }
 
-function listTareas(proyectoId?: string): Tarea[] {
-  return listTareasInStore(proyectoId);
+function listTareas(filters?: ListTareasFilters): Tarea[] {
+  if (!filters) {
+    return listTareasInStore();
+  }
+
+  if (!isValidListTareasFilters(filters)) {
+    return [];
+  }
+
+  return listTareasInStore({
+    proyectoId: filters.proyectoId,
+    estado: filters.estado as TareaEstado | undefined,
+    prioridad: filters.prioridad as TareaPrioridad | undefined
+  });
 }
 
 function findTareaById(id: string): Tarea | undefined {

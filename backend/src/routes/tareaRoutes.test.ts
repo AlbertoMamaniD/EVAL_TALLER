@@ -271,4 +271,78 @@ describe("tareaRoutes", () => {
       })
     ]);
   });
+
+  it("combina filtros por proyecto, estado y prioridad", async () => {
+    const proyectoA = await createProyecto("Proyecto A");
+    const proyectoB = await createProyecto("Proyecto B");
+
+    await fetch(`${baseUrl}/api/tareas`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        titulo: "Coincide",
+        proyectoId: proyectoA.id,
+        estado: "pendiente",
+        prioridad: "alta"
+      })
+    });
+    await fetch(`${baseUrl}/api/tareas`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        titulo: "Otro estado",
+        proyectoId: proyectoA.id,
+        estado: "hecha",
+        prioridad: "alta"
+      })
+    });
+    await fetch(`${baseUrl}/api/tareas`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        titulo: "Otro proyecto",
+        proyectoId: proyectoB.id,
+        estado: "pendiente",
+        prioridad: "alta"
+      })
+    });
+    await fetch(`${baseUrl}/api/tareas`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        titulo: "Otra prioridad",
+        proyectoId: proyectoA.id,
+        estado: "pendiente",
+        prioridad: "media"
+      })
+    });
+
+    const response = await fetch(
+      `${baseUrl}/api/tareas?proyectoId=${proyectoA.id}&estado=pendiente&prioridad=alta`
+    );
+    const tareas = (await response.json()) as Array<{
+      prioridad: string;
+      proyectoId: string;
+      estado: string;
+      titulo: string;
+    }>;
+
+    expect(response.status).toBe(200);
+    expect(tareas).toEqual([
+      expect.objectContaining({
+        titulo: "Coincide",
+        proyectoId: proyectoA.id,
+        estado: "pendiente",
+        prioridad: "alta"
+      })
+    ]);
+  });
 });

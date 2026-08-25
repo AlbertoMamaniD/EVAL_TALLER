@@ -3,14 +3,32 @@ import type { Tarea, TareaInput } from "../models/tarea.js";
 let tareas: Tarea[] = [];
 let nextTareaId = 1;
 
+type ListTareasFilters = {
+  estado?: Tarea["estado"];
+  prioridad?: Tarea["prioridad"];
+  proyectoId?: string;
+};
+
 function hasTareasByProyectoId(proyectoId: string): boolean {
   return tareas.some((tarea) => tarea.proyectoId === proyectoId);
 }
 
-function listTareas(proyectoId?: string): Tarea[] {
-  const filteredTareas = proyectoId
-    ? tareas.filter((tarea) => tarea.proyectoId === proyectoId)
-    : tareas;
+function listTareas(filters?: ListTareasFilters): Tarea[] {
+  const filteredTareas = tareas.filter((tarea) => {
+    if (filters?.proyectoId && tarea.proyectoId !== filters.proyectoId) {
+      return false;
+    }
+
+    if (filters?.estado && tarea.estado !== filters.estado) {
+      return false;
+    }
+
+    if (filters?.prioridad && tarea.prioridad !== filters.prioridad) {
+      return false;
+    }
+
+    return true;
+  });
 
   return filteredTareas.map((tarea) => ({ ...tarea }));
 }
