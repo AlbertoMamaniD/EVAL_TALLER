@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { ProyectoForm } from "../components/ProyectoForm";
 import { ProyectoTable } from "../components/ProyectoTable";
 import {
@@ -51,7 +51,7 @@ function ProyectosPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [isCreating, setIsCreating] = useState(false);
   const [savingId, setSavingId] = useState<string | null>(null);
-  const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [deletingIds, setDeletingIds] = useState<string[]>([]);
   const [pageError, setPageError] = useState<string | null>(null);
   const [formMessage, setFormMessage] = useState<string | null>(null);
   const [formValues, setFormValues] = useState<ProyectoFormValues>(
@@ -63,6 +63,11 @@ function ProyectosPage() {
     createEmptyProyectoFormValues()
   );
   const [editingErrors, setEditingErrors] = useState<ProyectoValidationErrors>({});
+  const editingIdRef = useRef<string | null>(null);
+
+  useEffect(() => {
+    editingIdRef.current = editingId;
+  }, [editingId]);
 
   useEffect(() => {
     const loadProyectos = async () => {
@@ -108,6 +113,10 @@ function ProyectosPage() {
   };
 
   const handleCreateSubmit = async () => {
+    if (isLoading) {
+      return;
+    }
+
     const nextErrors = validateProyectoForm(formValues);
 
     if (Object.keys(nextErrors).length > 0) {
@@ -135,6 +144,10 @@ function ProyectosPage() {
   };
 
   const handleEditStart = (proyecto: Proyecto) => {
+    if (savingId !== null) {
+      return;
+    }
+
     setEditingId(proyecto.id);
     setEditingValues(toFormValues(proyecto));
     setEditingErrors({});
@@ -166,7 +179,10 @@ function ProyectosPage() {
           proyecto.id === id ? updatedProyecto : proyecto
         )
       );
-      handleEditCancel();
+
+      if (editingIdRef.current === id) {
+        handleEditCancel();
+      }
     } catch (error) {
       setEditingErrors(getValidationErrors(error));
       setPageError(
@@ -187,7 +203,11 @@ function ProyectosPage() {
     }
 
     try {
-      setDeletingId(proyecto.id);
+      setDeletingIds((currentDeletingIds) =>
+        currentDeletingIds.includes(proyecto.id)
+          ? currentDeletingIds
+          : [...currentDeletingIds, proyecto.id]
+      );
       setPageError(null);
       await deleteProyecto(proyecto.id);
       setProyectos((currentProyectos) =>
@@ -200,7 +220,9 @@ function ProyectosPage() {
     } catch (error) {
       setPageError(getErrorMessage(error, "No se pudo eliminar el proyecto."));
     } finally {
-      setDeletingId(null);
+      setDeletingIds((currentDeletingIds) =>
+        currentDeletingIds.filter((currentId) => currentId !== proyecto.id)
+      );
     }
   };
 
@@ -224,6 +246,7 @@ function ProyectosPage() {
       <div className="content-grid">
         <ProyectoForm
           errors={formErrors}
+          isDisabled={isLoading || isCreating}
           isSubmitting={isCreating}
           onChange={handleCreateChange}
           onSubmit={handleCreateSubmit}
@@ -231,7 +254,7 @@ function ProyectosPage() {
         />
 
         <ProyectoTable
-          deletingId={deletingId}
+          deletingIds={deletingIds}
           editingErrors={editingErrors}
           editingId={editingId}
           editingValues={editingValues}

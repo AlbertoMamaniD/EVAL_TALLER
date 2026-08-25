@@ -44,7 +44,22 @@ function isValidProyectoEstado(value: unknown): value is ProyectoEstado {
 }
 
 function isValidDate(value: string): boolean {
-  return !Number.isNaN(Date.parse(value));
+  const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(value);
+
+  if (!match) {
+    return false;
+  }
+
+  const year = Number(match[1]);
+  const month = Number(match[2]);
+  const day = Number(match[3]);
+  const date = new Date(Date.UTC(year, month - 1, day));
+
+  return (
+    date.getUTCFullYear() === year &&
+    date.getUTCMonth() === month - 1 &&
+    date.getUTCDate() === day
+  );
 }
 
 function validateProyectoPayload(
@@ -77,10 +92,15 @@ function validateProyectoPayload(
   }
 
   if (proyectoPayload.fechaLimite !== undefined && proyectoPayload.fechaLimite !== null) {
+    const fechaLimite =
+      typeof proyectoPayload.fechaLimite === "string"
+        ? proyectoPayload.fechaLimite.trim()
+        : proyectoPayload.fechaLimite;
+
     if (
-      typeof proyectoPayload.fechaLimite !== "string" ||
-      proyectoPayload.fechaLimite.trim() === "" ||
-      !isValidDate(proyectoPayload.fechaLimite)
+      typeof fechaLimite !== "string" ||
+      fechaLimite === "" ||
+      !isValidDate(fechaLimite)
     ) {
       errors.fechaLimite = "La fecha limite debe ser una fecha valida.";
     }
@@ -110,7 +130,7 @@ function validateProyectoPayload(
           : "",
       fechaLimite:
         typeof proyectoPayload.fechaLimite === "string"
-          ? proyectoPayload.fechaLimite
+          ? proyectoPayload.fechaLimite.trim()
           : null,
       estado: isValidProyectoEstado(proyectoPayload.estado)
         ? proyectoPayload.estado

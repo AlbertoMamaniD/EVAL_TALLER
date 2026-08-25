@@ -3,6 +3,7 @@ import type { ProyectoFormValues } from "../pages/proyectosValidation";
 
 type ProyectoFormProps = {
   errors: ProyectoValidationErrors;
+  isDisabled: boolean;
   isSubmitting: boolean;
   onChange: (field: keyof ProyectoFormValues, value: string) => void;
   onSubmit: () => void;
@@ -11,6 +12,7 @@ type ProyectoFormProps = {
 
 function ProyectoForm({
   errors,
+  isDisabled,
   isSubmitting,
   onChange,
   onSubmit,
@@ -29,6 +31,7 @@ function ProyectoForm({
             name="nombre"
             type="text"
             value={values.nombre}
+            disabled={isDisabled}
             onChange={(event) => onChange("nombre", event.target.value)}
             placeholder="Ej. Rediseño del portal"
           />
@@ -41,6 +44,7 @@ function ProyectoForm({
             name="fechaLimite"
             type="date"
             value={values.fechaLimite}
+            disabled={isDisabled}
             onChange={(event) => onChange("fechaLimite", event.target.value)}
           />
           {errors.fechaLimite && (
@@ -54,6 +58,7 @@ function ProyectoForm({
             name="descripcion"
             rows={4}
             value={values.descripcion}
+            disabled={isDisabled}
             onChange={(event) => onChange("descripcion", event.target.value)}
             placeholder="Describe el alcance o contexto del proyecto"
           />
@@ -64,6 +69,7 @@ function ProyectoForm({
           <select
             name="estado"
             value={values.estado}
+            disabled={isDisabled}
             onChange={(event) => onChange("estado", event.target.value)}
           >
             <option value="activo">Activo</option>
@@ -77,7 +83,7 @@ function ProyectoForm({
           className="button button-primary"
           type="button"
           onClick={onSubmit}
-          disabled={isSubmitting}
+          disabled={isDisabled}
         >
           {isSubmitting ? "Guardando..." : "Crear proyecto"}
         </button>

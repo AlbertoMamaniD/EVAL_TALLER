@@ -91,6 +91,30 @@ describe("proyectoRoutes", () => {
     expect(payload.errors.nombre).toBe("El nombre es obligatorio.");
   });
 
+  it("rechaza fechas imposibles al crear", async () => {
+    const response = await fetch(`${baseUrl}/api/proyectos`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        nombre: "Proyecto con fecha invalida",
+        fechaLimite: "2026-02-30"
+      })
+    });
+
+    const payload = (await response.json()) as {
+      errors: {
+        fechaLimite?: string;
+      };
+    };
+
+    expect(response.status).toBe(400);
+    expect(payload.errors.fechaLimite).toBe(
+      "La fecha limite debe ser una fecha valida."
+    );
+  });
+
   it("edita un proyecto existente", async () => {
     const createResponse = await fetch(`${baseUrl}/api/proyectos`, {
       method: "POST",
@@ -134,6 +158,44 @@ describe("proyectoRoutes", () => {
       fechaLimite: "2026-10-01",
       estado: "cerrado"
     });
+  });
+
+  it("rechaza fechas imposibles al editar", async () => {
+    const createResponse = await fetch(`${baseUrl}/api/proyectos`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        nombre: "Proyecto base"
+      })
+    });
+    const createdProyecto = (await createResponse.json()) as { id: string };
+
+    const updateResponse = await fetch(
+      `${baseUrl}/api/proyectos/${createdProyecto.id}`,
+      {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          nombre: "Proyecto base",
+          fechaLimite: "2027-02-29"
+        })
+      }
+    );
+
+    const payload = (await updateResponse.json()) as {
+      errors: {
+        fechaLimite?: string;
+      };
+    };
+
+    expect(updateResponse.status).toBe(400);
+    expect(payload.errors.fechaLimite).toBe(
+      "La fecha limite debe ser una fecha valida."
+    );
   });
 
   it("borra un proyecto existente", async () => {

@@ -2,7 +2,7 @@ import type { Proyecto, ProyectoValidationErrors } from "../services/proyectosAp
 import type { ProyectoFormValues } from "../pages/proyectosValidation";
 
 type ProyectoTableProps = {
-  deletingId: string | null;
+  deletingIds: string[];
   editingErrors: ProyectoValidationErrors;
   editingId: string | null;
   editingValues: ProyectoFormValues;
@@ -35,7 +35,7 @@ function formatFechaLimite(value: string | null): string {
 }
 
 function ProyectoTable({
-  deletingId,
+  deletingIds,
   editingErrors,
   editingId,
   editingValues,
@@ -76,7 +76,8 @@ function ProyectoTable({
               {proyectos.map((proyecto) => {
                 const isEditing = proyecto.id === editingId;
                 const isSaving = proyecto.id === savingId;
-                const isDeleting = proyecto.id === deletingId;
+                const isDeleting = deletingIds.includes(proyecto.id);
+                const isInteractionLocked = savingId !== null || isDeleting;
 
                 return (
                   <tr key={proyecto.id}>
@@ -177,6 +178,7 @@ function ProyectoTable({
                               className="button button-secondary"
                               type="button"
                               onClick={() => onEdit(proyecto)}
+                              disabled={isInteractionLocked}
                             >
                               Editar
                             </button>
