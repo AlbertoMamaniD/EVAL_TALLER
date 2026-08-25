@@ -53,7 +53,9 @@ function isValidDate(value: string): boolean {
   const year = Number(match[1]);
   const month = Number(match[2]);
   const day = Number(match[3]);
-  const date = new Date(Date.UTC(year, month - 1, day));
+  const date = new Date(Date.UTC(0, month - 1, day));
+
+  date.setUTCFullYear(year);
 
   return (
     date.getUTCFullYear() === year &&

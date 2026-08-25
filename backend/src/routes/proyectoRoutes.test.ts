@@ -115,6 +115,26 @@ describe("proyectoRoutes", () => {
     );
   });
 
+  it("acepta fechas validas con anios tempranos al crear", async () => {
+    const response = await fetch(`${baseUrl}/api/proyectos`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        nombre: "Proyecto historico",
+        fechaLimite: "0099-12-31"
+      })
+    });
+
+    const proyecto = (await response.json()) as {
+      fechaLimite: string | null;
+    };
+
+    expect(response.status).toBe(201);
+    expect(proyecto.fechaLimite).toBe("0099-12-31");
+  });
+
   it("edita un proyecto existente", async () => {
     const createResponse = await fetch(`${baseUrl}/api/proyectos`, {
       method: "POST",

@@ -35,6 +35,16 @@ describe("proyectosValidation", () => {
     expect(errors.fechaLimite).toBe("La fecha limite debe ser una fecha valida.");
   });
 
+  it("acepta anios tempranos validos", () => {
+    const errors = validateProyectoForm({
+      ...createEmptyProyectoFormValues(),
+      nombre: "Proyecto demo",
+      fechaLimite: "0099-12-31"
+    });
+
+    expect(errors.fechaLimite).toBeUndefined();
+  });
+
   it("normaliza el payload antes de enviarlo a la API", () => {
     const payload = toProyectoPayload({
       nombre: "  Proyecto demo  ",
