@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { PageLayout } from "../components/PageLayout";
 import { TareaForm } from "../components/TareaForm";
 import { TareaTable } from "../components/TareaTable";
@@ -62,7 +62,8 @@ function toFormValues(tarea: Tarea): TareaFormValues {
 function TareasPage() {
   const [tareas, setTareas] = useState<Tarea[]>([]);
   const [proyectos, setProyectos] = useState<Proyecto[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const [isProjectsLoading, setIsProjectsLoading] = useState(true);
+  const [isTareasLoading, setIsTareasLoading] = useState(true);
   const [isCreating, setIsCreating] = useState(false);
   const [savingId, setSavingId] = useState<string | null>(null);
   const [deletingIds, setDeletingIds] = useState<string[]>([]);
@@ -83,17 +84,31 @@ function TareasPage() {
     prioridad: ""
   });
   const editingIdRef = useRef<string | null>(null);
+  const filtersRef = useRef(filters);
+  const isMountedRef = useRef(true);
+  const tareasRequestIdRef = useRef(0);
+  const isLoading = isProjectsLoading || isTareasLoading;
 
   useEffect(() => {
     editingIdRef.current = editingId;
   }, [editingId]);
 
   useEffect(() => {
+    filtersRef.current = filters;
+  }, [filters]);
+
+  useEffect(() => {
+    return () => {
+      isMountedRef.current = false;
+    };
+  }, []);
+
+  useEffect(() => {
     let isActive = true;
 
     const loadInitialData = async () => {
       try {
-        setIsLoading(true);
+        setIsProjectsLoading(true);
         setPageError(null);
         const proyectosResponse = await listProyectos();
 
@@ -110,7 +125,7 @@ function TareasPage() {
         setPageError(getErrorMessage(error, "No se pudieron cargar las tareas."));
       } finally {
         if (isActive) {
-          setIsLoading(false);
+          setIsProjectsLoading(false);
         }
       }
     };
@@ -122,46 +137,62 @@ function TareasPage() {
     };
   }, []);
 
-  useEffect(() => {
-    let isActive = true;
+  const loadTareas = useCallback(async (nextFilters: TareaFilters) => {
+    const requestId = tareasRequestIdRef.current + 1;
+    tareasRequestIdRef.current = requestId;
 
+    if (isMountedRef.current) {
+      setIsTareasLoading(true);
+    }
+
+    try {
+      const response = await listTareas(nextFilters);
+
+      if (!isMountedRef.current || requestId !== tareasRequestIdRef.current) {
+        return false;
+      }
+
+      setTareas(response);
+
+      return true;
+    } catch (error) {
+      if (!isMountedRef.current || requestId !== tareasRequestIdRef.current) {
+        return false;
+      }
+
+      throw error;
+    } finally {
+      if (isMountedRef.current && requestId === tareasRequestIdRef.current) {
+        setIsTareasLoading(false);
+      }
+    }
+  }, []);
+
+  useEffect(() => {
     const loadFilteredTareas = async () => {
       try {
-        setIsLoading(true);
         setPageError(null);
-        const response = await listTareas(filters);
-
-        if (!isActive) {
-          return;
-        }
-
-        setTareas(response);
+        await loadTareas(filters);
       } catch (error) {
-        if (!isActive) {
+        if (!isMountedRef.current) {
           return;
         }
 
         setPageError(getErrorMessage(error, "No se pudieron cargar las tareas."));
-      } finally {
-        if (isActive) {
-          setIsLoading(false);
-        }
       }
     };
 
     void loadFilteredTareas();
-
-    return () => {
-      isActive = false;
-    };
-  }, [filters]);
+  }, [filters, loadTareas]);
 
   const projectIds = proyectos.map((proyecto) => proyecto.id);
 
-  const reloadTareas = async (nextFilters: TareaFilters = filters) => {
-    const response = await listTareas(nextFilters);
-    setTareas(response);
-  };
+  const reloadTareas = useCallback(
+    async (nextFilters: TareaFilters = filtersRef.current) => {
+      await loadTareas(nextFilters);
+    },
+    [loadTareas]
+  );
 
   const handleCreateChange = (field: keyof TareaFormValues, value: string) => {
     setFormValues((currentValues) => ({
