@@ -3,6 +3,10 @@ import type { Tarea, TareaInput } from "../models/tarea.js";
 let tareas: Tarea[] = [];
 let nextTareaId = 1;
 
+function hasTareasByProyectoId(proyectoId: string): boolean {
+  return tareas.some((tarea) => tarea.proyectoId === proyectoId);
+}
+
 function listTareas(proyectoId?: string): Tarea[] {
   const filteredTareas = proyectoId
     ? tareas.filter((tarea) => tarea.proyectoId === proyectoId)
@@ -67,6 +71,7 @@ export {
   createTarea,
   deleteTarea,
   getTareaById,
+  hasTareasByProyectoId,
   listTareas,
   resetTareaStore,
   updateTarea

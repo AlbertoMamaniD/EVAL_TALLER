@@ -12,6 +12,7 @@ import {
   listProyectos as listProyectosInStore,
   updateProyecto as updateProyectoInStore
 } from "../store/proyectoStore.js";
+import { hasTareasByProyectoId } from "../store/tareaStore.js";
 import { isValidDateString } from "./dateValidation.js";
 
 type ValidationResult =
@@ -33,6 +34,8 @@ type MutateProyectoResult =
       success: false;
       errors: ProyectoValidationErrors;
     };
+
+type DeleteProyectoResult = "deleted" | "not_found" | "has_tasks";
 
 const ESTADOS_PROYECTO: ProyectoEstado[] = ["activo", "cerrado"];
 
@@ -161,8 +164,20 @@ function updateProyecto(id: string, payload: unknown): MutateProyectoResult | nu
   };
 }
 
-function deleteProyecto(id: string): boolean {
-  return deleteProyectoInStore(id);
+function deleteProyecto(id: string): DeleteProyectoResult {
+  const existingProyecto = getProyectoById(id);
+
+  if (!existingProyecto) {
+    return "not_found";
+  }
+
+  if (hasTareasByProyectoId(id)) {
+    return "has_tasks";
+  }
+
+  deleteProyectoInStore(id);
+
+  return "deleted";
 }
 
 export {

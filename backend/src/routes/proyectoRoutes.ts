@@ -60,8 +60,15 @@ proyectoRoutes.put("/:id", (request, response) => {
 proyectoRoutes.delete("/:id", (request, response) => {
   const deleted = deleteProyecto(request.params.id);
 
-  if (!deleted) {
+  if (deleted === "not_found") {
     response.status(404).json({ message: "Proyecto no encontrado." });
+    return;
+  }
+
+  if (deleted === "has_tasks") {
+    response.status(400).json({
+      message: "No se puede eliminar el proyecto porque tiene tareas asociadas."
+    });
     return;
   }
 
