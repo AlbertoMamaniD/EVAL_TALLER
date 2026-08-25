@@ -62,7 +62,7 @@ function ProyectoTable({
 
       {!isLoading && proyectos.length > 0 && (
         <div className="table-wrapper">
-          <table className="project-table">
+          <table className="project-table project-table-proyectos">
             <thead>
               <tr>
                 <th>Nombre</th>
