@@ -113,6 +113,9 @@ function TareaForm({
             onChange={(event) => onChange("descripcion", event.target.value)}
             placeholder="Describe el trabajo a realizar"
           />
+          {errors.descripcion && (
+            <small className="error-text">{errors.descripcion}</small>
+          )}
         </label>
       </div>
 

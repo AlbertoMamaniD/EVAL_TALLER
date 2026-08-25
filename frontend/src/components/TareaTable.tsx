@@ -192,13 +192,20 @@ function TareaTable({
                     </td>
                     <td data-label="Descripcion">
                       {isEditing ? (
-                        <textarea
-                          rows={3}
-                          value={editingValues.descripcion}
-                          onChange={(event) =>
-                            onEditChange("descripcion", event.target.value)
-                          }
-                        />
+                        <div className="cell-field">
+                          <textarea
+                            rows={3}
+                            value={editingValues.descripcion}
+                            onChange={(event) =>
+                              onEditChange("descripcion", event.target.value)
+                            }
+                          />
+                          {editingErrors.descripcion && (
+                            <small className="error-text">
+                              {editingErrors.descripcion}
+                            </small>
+                          )}
+                        </div>
                       ) : (
                         tarea.descripcion || "Sin descripcion"
                       )}
