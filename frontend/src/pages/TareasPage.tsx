@@ -98,6 +98,8 @@ function TareasPage() {
   }, [filters]);
 
   useEffect(() => {
+    isMountedRef.current = true;
+
     return () => {
       isMountedRef.current = false;
     };
