@@ -16,7 +16,7 @@ function ProyectoForm({
   isSubmitting,
   onChange,
   onSubmit,
-  values
+  values,
 }: ProyectoFormProps) {
   return (
     <section className="panel">
@@ -33,9 +33,11 @@ function ProyectoForm({
             value={values.nombre}
             disabled={isDisabled}
             onChange={(event) => onChange("nombre", event.target.value)}
-            placeholder="Ej. Rediseño del portal"
+            placeholder="Ej. Rediseno del portal"
           />
-          {errors.nombre && <small className="error-text">{errors.nombre}</small>}
+          {errors.nombre && (
+            <small className="error-text">{errors.nombre}</small>
+          )}
         </label>
 
         <label className="field">
@@ -62,6 +64,9 @@ function ProyectoForm({
             onChange={(event) => onChange("descripcion", event.target.value)}
             placeholder="Describe el alcance o contexto del proyecto"
           />
+          {errors.descripcion && (
+            <small className="error-text">{errors.descripcion}</small>
+          )}
         </label>
 
         <label className="field">

@@ -3,14 +3,14 @@ import type {
   ProyectoEstado,
   ProyectoInput,
   ProyectoPayload,
-  ProyectoValidationErrors
+  ProyectoValidationErrors,
 } from "../models/proyecto.js";
 import {
   createProyecto as createProyectoInStore,
   deleteProyecto as deleteProyectoInStore,
   getProyectoById,
   listProyectos as listProyectosInStore,
-  updateProyecto as updateProyectoInStore
+  updateProyecto as updateProyectoInStore,
 } from "../store/proyectoStore.js";
 import { hasTareasByProyectoId } from "../store/tareaStore.js";
 import { isValidDateString } from "./dateValidation.js";
@@ -46,26 +46,31 @@ function isObject(value: unknown): value is Record<string, unknown> {
 }
 
 function isValidProyectoEstado(value: unknown): value is ProyectoEstado {
-  return typeof value === "string" && ESTADOS_PROYECTO.includes(value as ProyectoEstado);
+  return (
+    typeof value === "string" &&
+    ESTADOS_PROYECTO.includes(value as ProyectoEstado)
+  );
 }
 
 function validateProyectoPayload(
   payload: unknown,
-  defaultEstado: ProyectoEstado = "activo"
+  defaultEstado: ProyectoEstado = "activo",
 ): ValidationResult {
   if (!isObject(payload)) {
     return {
       success: false,
       errors: {
-        nombre: "El nombre es obligatorio."
-      }
+        nombre: "El nombre es obligatorio.",
+      },
     };
   }
 
   const proyectoPayload = payload as ProyectoPayload;
   const errors: ProyectoValidationErrors = {};
   const nombre =
-    typeof proyectoPayload.nombre === "string" ? proyectoPayload.nombre.trim() : "";
+    typeof proyectoPayload.nombre === "string"
+      ? proyectoPayload.nombre.trim()
+      : "";
   const descripcion =
     typeof proyectoPayload.descripcion === "string"
       ? proyectoPayload.descripcion.trim()
@@ -86,11 +91,13 @@ function validateProyectoPayload(
     typeof descripcion === "string" &&
     descripcion.length > MAX_PROYECTO_DESCRIPCION_LENGTH
   ) {
-    errors.descripcion =
-      `La descripcion no puede superar los ${MAX_PROYECTO_DESCRIPCION_LENGTH} caracteres.`;
+    errors.descripcion = `La descripcion no puede superar los ${MAX_PROYECTO_DESCRIPCION_LENGTH} caracteres.`;
   }
 
-  if (proyectoPayload.fechaLimite !== undefined && proyectoPayload.fechaLimite !== null) {
+  if (
+    proyectoPayload.fechaLimite !== undefined &&
+    proyectoPayload.fechaLimite !== null
+  ) {
     const fechaLimite =
       typeof proyectoPayload.fechaLimite === "string"
         ? proyectoPayload.fechaLimite.trim()
@@ -115,14 +122,14 @@ function validateProyectoPayload(
   if (Object.keys(errors).length > 0) {
     return {
       success: false,
-      errors
+      errors,
     };
   }
 
   return {
-      success: true,
-      data: {
-        nombre,
+    success: true,
+    data: {
+      nombre,
       descripcion: descripcion ?? "",
       fechaLimite:
         typeof proyectoPayload.fechaLimite === "string"
@@ -130,8 +137,8 @@ function validateProyectoPayload(
           : null,
       estado: isValidProyectoEstado(proyectoPayload.estado)
         ? proyectoPayload.estado
-        : defaultEstado
-    }
+        : defaultEstado,
+    },
   };
 }
 
@@ -152,18 +159,24 @@ function createProyecto(payload: unknown): MutateProyectoResult {
 
   return {
     success: true,
-    data: createProyectoInStore(validationResult.data)
+    data: createProyectoInStore(validationResult.data),
   };
 }
 
-function updateProyecto(id: string, payload: unknown): MutateProyectoResult | null {
+function updateProyecto(
+  id: string,
+  payload: unknown,
+): MutateProyectoResult | null {
   const existingProyecto = getProyectoById(id);
 
   if (!existingProyecto) {
     return null;
   }
 
-  const validationResult = validateProyectoPayload(payload, existingProyecto.estado);
+  const validationResult = validateProyectoPayload(
+    payload,
+    existingProyecto.estado,
+  );
 
   if (!validationResult.success) {
     return validationResult;
@@ -171,7 +184,7 @@ function updateProyecto(id: string, payload: unknown): MutateProyectoResult | nu
 
   return {
     success: true,
-    data: updateProyectoInStore(id, validationResult.data) as Proyecto
+    data: updateProyectoInStore(id, validationResult.data) as Proyecto,
   };
 }
 
@@ -197,5 +210,5 @@ export {
   findProyectoById,
   listProyectos,
   updateProyecto,
-  validateProyectoPayload
+  validateProyectoPayload,
 };

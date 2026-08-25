@@ -1,4 +1,7 @@
-import type { Proyecto, ProyectoValidationErrors } from "../services/proyectosApi";
+import type {
+  Proyecto,
+  ProyectoValidationErrors,
+} from "../services/proyectosApi";
 import type { ProyectoFormValues } from "../pages/proyectosValidation";
 
 type ProyectoTableProps = {
@@ -30,7 +33,7 @@ function formatFechaLimite(value: string | null): string {
   return new Intl.DateTimeFormat("es-AR", {
     day: "2-digit",
     month: "2-digit",
-    year: "numeric"
+    year: "numeric",
   }).format(date);
 }
 
@@ -46,7 +49,7 @@ function ProyectoTable({
   onEditChange,
   onSaveEdit,
   proyectos,
-  savingId
+  savingId,
 }: ProyectoTableProps) {
   return (
     <section className="panel">
@@ -103,13 +106,20 @@ function ProyectoTable({
                     </td>
                     <td data-label="Descripcion">
                       {isEditing ? (
-                        <textarea
-                          rows={3}
-                          value={editingValues.descripcion}
-                          onChange={(event) =>
-                            onEditChange("descripcion", event.target.value)
-                          }
-                        />
+                        <div className="cell-field">
+                          <textarea
+                            rows={3}
+                            value={editingValues.descripcion}
+                            onChange={(event) =>
+                              onEditChange("descripcion", event.target.value)
+                            }
+                          />
+                          {editingErrors.descripcion && (
+                            <small className="error-text">
+                              {editingErrors.descripcion}
+                            </small>
+                          )}
+                        </div>
                       ) : (
                         proyecto.descripcion || "Sin descripcion"
                       )}
@@ -146,7 +156,9 @@ function ProyectoTable({
                           <option value="cerrado">Cerrado</option>
                         </select>
                       ) : (
-                        <span className={`status-pill status-${proyecto.estado}`}>
+                        <span
+                          className={`status-pill status-${proyecto.estado}`}
+                        >
                           {proyecto.estado}
                         </span>
                       )}
