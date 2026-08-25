@@ -32,6 +32,23 @@ describe("tareasValidation", () => {
     expect(errors.proyectoId).toBe("El proyecto seleccionado no existe.");
   });
 
+  it("valida el largo maximo de titulo y descripcion", () => {
+    const errors = validateTareaForm(
+      {
+        ...createEmptyTareaFormValues(),
+        titulo: "T".repeat(121),
+        descripcion: "D".repeat(501),
+        proyectoId: "1"
+      },
+      ["1"]
+    );
+
+    expect(errors.titulo).toBe("El titulo no puede superar los 120 caracteres.");
+    expect(errors.descripcion).toBe(
+      "La descripcion no puede superar los 500 caracteres."
+    );
+  });
+
   it("valida que la fecha de vencimiento sea correcta", () => {
     const errors = validateTareaForm(
       {

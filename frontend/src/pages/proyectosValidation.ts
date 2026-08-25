@@ -12,6 +12,9 @@ export type ProyectoFormValues = {
   estado: ProyectoEstado;
 };
 
+const MAX_PROYECTO_NOMBRE_LENGTH = 100;
+const MAX_PROYECTO_DESCRIPCION_LENGTH = 500;
+
 function validateProyectoForm(
   values: ProyectoFormValues
 ): ProyectoValidationErrors {
@@ -19,6 +22,13 @@ function validateProyectoForm(
 
   if (!values.nombre.trim()) {
     errors.nombre = "El nombre es obligatorio.";
+  } else if (values.nombre.trim().length > MAX_PROYECTO_NOMBRE_LENGTH) {
+    errors.nombre = `El nombre no puede superar los ${MAX_PROYECTO_NOMBRE_LENGTH} caracteres.`;
+  }
+
+  if (values.descripcion.trim().length > MAX_PROYECTO_DESCRIPCION_LENGTH) {
+    errors.descripcion =
+      `La descripcion no puede superar los ${MAX_PROYECTO_DESCRIPCION_LENGTH} caracteres.`;
   }
 
   if (values.fechaLimite && !isValidDateString(values.fechaLimite)) {

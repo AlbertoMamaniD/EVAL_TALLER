@@ -15,6 +15,9 @@ export type TareaFormValues = {
   fechaVencimiento: string;
 };
 
+const MAX_TAREA_TITULO_LENGTH = 120;
+const MAX_TAREA_DESCRIPCION_LENGTH = 500;
+
 function validateTareaForm(
   values: TareaFormValues,
   availableProjectIds: string[]
@@ -23,6 +26,13 @@ function validateTareaForm(
 
   if (!values.titulo.trim()) {
     errors.titulo = "El titulo es obligatorio.";
+  } else if (values.titulo.trim().length > MAX_TAREA_TITULO_LENGTH) {
+    errors.titulo = `El titulo no puede superar los ${MAX_TAREA_TITULO_LENGTH} caracteres.`;
+  }
+
+  if (values.descripcion.trim().length > MAX_TAREA_DESCRIPCION_LENGTH) {
+    errors.descripcion =
+      `La descripcion no puede superar los ${MAX_TAREA_DESCRIPCION_LENGTH} caracteres.`;
   }
 
   if (!values.proyectoId.trim()) {

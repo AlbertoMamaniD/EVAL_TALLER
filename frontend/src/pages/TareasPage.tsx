@@ -124,7 +124,7 @@ function TareasPage() {
           return;
         }
 
-        setPageError(getErrorMessage(error, "No se pudieron cargar las tareas."));
+        setPageError(getErrorMessage(error, "No se pudieron cargar los proyectos."));
       } finally {
         if (isActive) {
           setIsProjectsLoading(false);

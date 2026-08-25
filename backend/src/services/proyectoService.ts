@@ -38,6 +38,8 @@ type MutateProyectoResult =
 type DeleteProyectoResult = "deleted" | "not_found" | "has_tasks";
 
 const ESTADOS_PROYECTO: ProyectoEstado[] = ["activo", "cerrado"];
+const MAX_PROYECTO_NOMBRE_LENGTH = 100;
+const MAX_PROYECTO_DESCRIPCION_LENGTH = 500;
 
 function isObject(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null;
@@ -64,9 +66,15 @@ function validateProyectoPayload(
   const errors: ProyectoValidationErrors = {};
   const nombre =
     typeof proyectoPayload.nombre === "string" ? proyectoPayload.nombre.trim() : "";
+  const descripcion =
+    typeof proyectoPayload.descripcion === "string"
+      ? proyectoPayload.descripcion.trim()
+      : undefined;
 
   if (!nombre) {
     errors.nombre = "El nombre es obligatorio.";
+  } else if (nombre.length > MAX_PROYECTO_NOMBRE_LENGTH) {
+    errors.nombre = `El nombre no puede superar los ${MAX_PROYECTO_NOMBRE_LENGTH} caracteres.`;
   }
 
   if (
@@ -74,6 +82,12 @@ function validateProyectoPayload(
     typeof proyectoPayload.descripcion !== "string"
   ) {
     errors.descripcion = "La descripcion debe ser un texto.";
+  } else if (
+    typeof descripcion === "string" &&
+    descripcion.length > MAX_PROYECTO_DESCRIPCION_LENGTH
+  ) {
+    errors.descripcion =
+      `La descripcion no puede superar los ${MAX_PROYECTO_DESCRIPCION_LENGTH} caracteres.`;
   }
 
   if (proyectoPayload.fechaLimite !== undefined && proyectoPayload.fechaLimite !== null) {
@@ -106,13 +120,10 @@ function validateProyectoPayload(
   }
 
   return {
-    success: true,
-    data: {
-      nombre,
-      descripcion:
-        typeof proyectoPayload.descripcion === "string"
-          ? proyectoPayload.descripcion.trim()
-          : "",
+      success: true,
+      data: {
+        nombre,
+      descripcion: descripcion ?? "",
       fechaLimite:
         typeof proyectoPayload.fechaLimite === "string"
           ? proyectoPayload.fechaLimite.trim()
