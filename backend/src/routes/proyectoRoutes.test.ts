@@ -135,6 +135,26 @@ describe("proyectoRoutes", () => {
     expect(proyecto.fechaLimite).toBe("0099-12-31");
   });
 
+  it("acepta dias bisiestos validos al crear", async () => {
+    const response = await fetch(`${baseUrl}/api/proyectos`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        nombre: "Proyecto bisiesto",
+        fechaLimite: "0004-02-29"
+      })
+    });
+
+    const proyecto = (await response.json()) as {
+      fechaLimite: string | null;
+    };
+
+    expect(response.status).toBe(201);
+    expect(proyecto.fechaLimite).toBe("0004-02-29");
+  });
+
   it("edita un proyecto existente", async () => {
     const createResponse = await fetch(`${baseUrl}/api/proyectos`, {
       method: "POST",

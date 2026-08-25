@@ -45,6 +45,16 @@ describe("proyectosValidation", () => {
     expect(errors.fechaLimite).toBeUndefined();
   });
 
+  it("acepta dias bisiestos validos", () => {
+    const errors = validateProyectoForm({
+      ...createEmptyProyectoFormValues(),
+      nombre: "Proyecto demo",
+      fechaLimite: "0004-02-29"
+    });
+
+    expect(errors.fechaLimite).toBeUndefined();
+  });
+
   it("normaliza el payload antes de enviarlo a la API", () => {
     const payload = toProyectoPayload({
       nombre: "  Proyecto demo  ",
